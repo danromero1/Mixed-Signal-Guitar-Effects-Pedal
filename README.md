@@ -150,6 +150,7 @@ This project serves as practical exploration of:
 **DSP Theory**
 - *The Scientist and Engineer's Guide to Digital Signal Processing* by Steven W. Smith
 - *Understanding Digital Signal Processing* by Richard G. Lyons
+- *Small Signal Audio Design* by Douglas Self
 
 **Application Notes**
 - STM32 Audio Processing Application Notes
