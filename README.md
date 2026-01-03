@@ -59,10 +59,10 @@ This project implements a 4-layer PCB design for a guitar effects pedal featurin
 Designed analog input/output stages for guitar signal conditioning. Simulated 3rd-order Butterworth anti-aliasing filter in LTspice and validated ADC/DAC interfacing circuits.
 
 ### PCB Layout (4-Layer Stack-up)
-- **Layer 1:** Top signal layer (components, high-speed signals)
-- **Layer 2:** Ground plane (noise reduction, return paths)
-- **Layer 3:** Ground plane (additional shielding, signal isolation)
-- **Layer 4:** Bottom signal layer (routing, power distribution)
+- **Layer 1:** Top signal layer (components, sensitive analog paths, high-speed digital)
+- **Layer 2:** Solid ground plane for low-impedance return paths and noise control
+- **Layer 3:** Secondary ground plane used for shielding and analog/digital isolation
+- **Layer 4:** Bottom signal layer for routing and power distribution
 
 **Design Considerations:**
 - Analog/digital domain separation
