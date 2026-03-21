@@ -7,6 +7,7 @@
 #define GPIOC_BASE	0x40020800
 #define USART3_BASE	0x40004800
 #define	ADC1_BASE	0x40012000
+#define DAC_BASE	0x40007400
 #define TIM2_BASE	0x40000000
 #define DMA2_BASE	0x40026400
 
@@ -18,6 +19,7 @@
 #define RCC_AHB1ENR		(*((volatile uint32_t *)(RCC_BASE + 0x30)))
 #define RCC_APB1ENR		(*((volatile uint32_t *)(RCC_BASE + 0x40)))
 #define RCC_APB2ENR		(*((volatile uint32_t *)(RCC_BASE + 0x44)))
+
 
 //TIM2 Registers
 #define TIM2_CR1		(*((volatile uint32_t *)(TIM2_BASE + 0x00)))
@@ -64,6 +66,11 @@
 #define ADC1_SQR3		(*((volatile uint32_t *)(ADC1_BASE + 0x34)))
 #define ADC1_DR			(*((volatile uint32_t *)(ADC1_BASE + 0x4C)))
 
+//DAC Registers
+#define DAC_CR			(*((volatile uint32_t *)(DAC_BASE + 0x00)))
+#define DAC_DHR12R2		(*((volatile uint32_t *)(DAC_BASE + 0x14)))
+
+
 //ADC Common Register
 #define	ADC_CCR			(*((volatile uint32_t *)(0x40012300 + 0x04)))
 
@@ -108,6 +115,7 @@ void adc_init(void) {
 	ADC1_CR2 |= (6 << 24);	//EXTSEL = 0110, TIM2 TRGO
 	ADC1_CR2 |= (1 << 28); 	//EXTEN = 01, rising edge
 	ADC1_CR2 |= (1 << 8);  // DMA enable
+	ADC1_CR2 |= (1 << 9);  // DDS - keep DMA requests continuous
 
 	//Wait for ADC to stabilize
 	delay(10000);
@@ -170,7 +178,28 @@ void DMA2_Stream0_IRQHandler(void) {
 		} else {
 		    buffer_ready = 1;  // CT=0 means DMA switched to buffer A, so B is ready
 		}
+
+		// Simple pass-through - write ADC samples to DAC
+		// Output all samples to DAC
+		volatile uint16_t *buf = (buffer_ready == 0) ? buffer_A : buffer_B;
+		for(int i = 0; i < BUFFER_SIZE; i++) {
+		    DAC_DHR12R2 = buf[i];
+		    // Small delay for DAC to settle
+		    for(volatile int d = 0; d < 14; d++);
+		}
 	}
+}
+
+void dac_init(void) {
+
+	//DAC Enable
+	RCC_APB1ENR |= (1 << 29);
+
+	//Set GPIO 12 (PA5) to Analog for DAC
+	GPIOA_MODER |= (3 << 10);	//This is PA 5 (2x pin# and 11 for analog)
+
+	DAC_CR |= (1 << 16);		//EN2 - Enable channel 2 DAC
+
 }
 
 int main(void) {
@@ -181,6 +210,7 @@ int main(void) {
 	adc_init();
 	timer_init();
 	dma_init();
+	dac_init();
 
 	//Enable GPIOC, set PC1 as output (red LED)
 	RCC_AHB1ENR |= (1 << 2);
